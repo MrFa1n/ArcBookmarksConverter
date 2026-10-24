@@ -18,6 +18,9 @@ proven unreliable (see `arc_to_chrome.py`'s docstring). It exercises:
 
 - one top-level folder per Space, each named after the Space;
 - nested folders preserved in source order (`Work` → `Research` → `Drafts`);
+- within "Research", content ordered by its declared `childrenIds`
+  (`Drafts` before the "Research Paper 1" tab) rather than by the order
+  those records happen to appear in `sidebar.items`, which doesn't match;
 - a pinned-like tab (`Work`'s "Mail") flattened directly into the Space
   folder, listed first, with no extra `Pinned` subfolder — `Work`'s whole
   container is found purely via the `itemContainer` scan (no

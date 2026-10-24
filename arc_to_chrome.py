@@ -120,6 +120,37 @@ def collect_container_index(
     return topapps_ids, spaceitems_by_key
 
 
+def reorder_by_declared_children(
+    children_by_parent: dict[str, list[dict[str, Any]]],
+    by_id: dict[str, dict[str, Any]],
+) -> None:
+    """Reorder each parent's children to match that item's own childrenIds.
+
+    childrenIds is Arc's authoritative ordering — the order its own sidebar
+    UI shows. The order items happen to appear in sidebar.items (what
+    children_by_parent is built from) does not reliably match it, so without
+    this, exported folders can come out in a different order than Arc shows.
+    Mutates children_by_parent in place.
+    """
+    for parent_id, children in children_by_parent.items():
+        parent_item = by_id.get(parent_id)
+        if parent_item is None:
+            continue
+        declared_ids = parent_item.get("childrenIds")
+        if not isinstance(declared_ids, list) or not declared_ids:
+            continue
+
+        by_child_id = {
+            child["id"]: child for child in children if isinstance(child.get("id"), str)
+        }
+        declared_id_set = set(declared_ids)
+        ordered = [by_child_id[cid] for cid in declared_ids if cid in by_child_id]
+        # Anything not listed in childrenIds (shouldn't normally happen) is
+        # still exported, just appended after the declared order.
+        leftover = [child for child in children if child.get("id") not in declared_id_set]
+        children_by_parent[parent_id] = ordered + leftover
+
+
 def extract_declared_container_ids(
     space: dict[str, Any], by_id: dict[str, Any]
 ) -> list[str]:
@@ -230,6 +261,7 @@ def main() -> None:
             children_by_parent.setdefault(parent_id, []).append(item)
         else:
             roots.append(item)
+    reorder_by_declared_children(children_by_parent, by_id)
 
     lines = [
         "<!DOCTYPE NETSCAPE-Bookmark-file-1>",

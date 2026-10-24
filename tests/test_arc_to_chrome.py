@@ -54,6 +54,19 @@ class ArcToChromeTests(unittest.TestCase):
 
         self.assertTrue(mail_pos < research_pos < drafts_pos < dashboard_pos)
 
+    def test_childrenids_order_wins_over_file_appearance_order(self) -> None:
+        # "folder-work-research" declares childrenIds =
+        # ["folder-work-drafts", "tab-work-research-1"] — the reverse of the
+        # order those two records actually appear in sidebar.items. Arc's
+        # own childrenIds is authoritative, so "Drafts" must come first.
+        work_start = self.html.index("<DT><H3>Work</H3>")
+        personal_start = self.html.index("<DT><H3>Personal</H3>")
+        work_section = self.html[work_start:personal_start]
+
+        drafts_pos = work_section.index("<DT><H3>Drafts</H3>")
+        research_1_pos = work_section.index('HREF="https://example.com/research1"')
+        self.assertTrue(drafts_pos < research_1_pos)
+
     def test_container_not_listed_in_containerids_is_still_picked_up(self) -> None:
         # "Personal" only declares "personal-declared-root" in containerIDs;
         # "personal-extra-root" (holding the "Calendar" tab) is a second

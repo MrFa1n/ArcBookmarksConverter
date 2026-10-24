@@ -20,6 +20,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Arc's "Top Apps" row (shown identically under every Space — shared rather
   than owned by any one of them) gets its own top-level folder, "Arc —
   Shared Pinned", instead of leaking into a generic untitled folder.
+- Folder/container contents are now ordered by each item's own declared
+  `childrenIds` (Arc's authoritative ordering) instead of by the order
+  those records happen to appear in `sidebar.items`, which a real export
+  showed does not reliably match.
 - `tools/sanitize_arc.py` to redact a sidebar file before sharing it.
 - CLI arguments for input/output paths on both scripts (previously hardcoded).
 - Test suite (`tests/`) and a synthetic sample fixture (`examples/`).
