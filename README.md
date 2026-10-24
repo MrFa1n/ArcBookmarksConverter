@@ -47,14 +47,13 @@ Requires Python 3.10+, no third-party dependencies.
   Arc, instead of one giant flat pile.
 - Inside each Space's folder, the original folder nesting and order are
   preserved exactly as in `StorableSidebar.json`.
-- **Pinned tabs** for a Space (if any) are collected into a `Pinned`
-  subfolder at the top of that Space's folder. A Space with no pinned tabs
-  gets no `Pinned` subfolder.
-- Tabs that can't be tied to any Space (orphaned/legacy records) are still
-  exported — top-level ones keep their own structure, and anything truly
-  unreachable is collected into a fallback folder named
-  *"Arc — отдельные и закреплённые вкладки"* ("Arc — standalone and pinned
-  tabs") so nothing gets silently dropped.
+- **Pinned tabs** for a Space (if any) are listed first, flattened directly
+  into that Space's folder — no extra "Pinned" subfolder layer.
+- **Tabs pinned straight to a Space** (not inside a folder, not in the
+  "pinned" container either) are also picked up and placed into that Space's
+  folder.
+- Tabs that still can't be tied to any Space are collected into a fallback
+  folder named *"Arc — Shared Pinned"*, so nothing gets silently dropped.
 - Duplicate entries (same ID, or same title+URL) are skipped.
 
 ## Sanitizing a sidebar file before sharing it

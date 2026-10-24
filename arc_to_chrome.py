@@ -10,11 +10,12 @@ Or pass explicit paths:
 The output has one top-level folder per Arc Space, named after that Space.
 Inside each Space folder, the original folder nesting and order are preserved
 exactly as in StorableSidebar.json. Pinned tabs for a Space (if any) are
-collected into a "Pinned" subfolder at the top of that Space's folder.
+listed first, flattened directly into that Space's folder (no extra
+"Pinned" subfolder).
 
-Any tabs that can't be tied to a Space or a folder (orphaned records with no
-reachable parent) are collected into a final folder named
-"Arc — отдельные и закреплённые вкладки".
+Any tabs that still can't be tied to a Space (not inside a folder, not
+pinned, not pinned-to-space) are collected into a final folder named
+"Arc — Shared Pinned".
 """
 
 import argparse
@@ -25,9 +26,8 @@ from typing import Any
 
 DEFAULT_INPUT_FILE = Path("StorableSidebar.json")
 DEFAULT_OUTPUT_FILE = Path("arc_bookmarks.html")
-FALLBACK_FOLDER_TITLE = "Arc — отдельные и закреплённые вкладки"
+FALLBACK_FOLDER_TITLE = "Arc — Shared Pinned"
 DEFAULT_SPACE_TITLE = "Arc Space"
-PINNED_FOLDER_TITLE = "Pinned"
 
 
 def records_from_pairs(value: Any) -> list[dict[str, Any]]:
@@ -229,7 +229,7 @@ def main() -> None:
     # First pass: one top-level folder per Arc Space, so the number of folders
     # under the imported root matches the number of Spaces in Arc. Within each
     # Space folder, the original nesting/order is preserved as-is; pinned tabs
-    # (if any) are collected into a "Pinned" subfolder at the top.
+    # (if any) are listed first, flattened directly into the Space folder.
     used_space_titles: dict[str, int] = {}
     for space in spaces:
         space_title = str(space.get("title") or "").strip() or DEFAULT_SPACE_TITLE
@@ -249,15 +249,18 @@ def main() -> None:
         lines.append(f'    <DT><H3>{html.escape(display_title)}</H3>')
         lines.append("    <DL><p>")
 
+        # Pinned tabs go first, flattened directly into the Space folder —
+        # no extra "Pinned" wrapper folder, matching how Arc shows them.
         if pinned_container_id:
-            pinned_children = children_by_parent.get(pinned_container_id, [])
-            visited.add(pinned_container_id)
-            if pinned_children:
-                lines.append(f'        <DT><H3>{html.escape(PINNED_FOLDER_TITLE)}</H3>')
-                lines.append("        <DL><p>")
-                for child in pinned_children:
-                    emit_item(child, 3)
-                lines.append("        </DL><p>")
+            emit_children(pinned_container_id, 2)
+
+        # Some tabs are pinned straight to the Space itself rather than to
+        # its "pinned" container or living inside a folder — their parentID
+        # is the Space's own id. Pick those up too instead of letting them
+        # fall through to the generic fallback folder below.
+        space_id = space.get("id")
+        if isinstance(space_id, str) and space_id:
+            emit_children(space_id, 2)
 
         for container_id in other_container_ids:
             emit_children(container_id, 2)

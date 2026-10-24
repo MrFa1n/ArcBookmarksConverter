@@ -15,8 +15,10 @@ It models two Arc Spaces ("Work" and "Personal") to exercise:
 
 - one top-level folder per Space, each named after the Space;
 - nested folders preserved in source order (`Work` → `Research` → `Drafts`);
-- a pinned tab collected into a `Pinned` subfolder (`Work` only — `Personal`
-  has none, so it gets no `Pinned` subfolder at all);
+- a pinned tab (`Work`'s "Mail") flattened directly into the Space folder,
+  listed first, with no extra `Pinned` subfolder;
+- a tab pinned straight to a Space with no folder and no "pinned" container
+  (`Personal`'s "Calendar", `parentID` == the Space's own id);
 - a tab with no reachable parent (`tab-orphan`), which still gets exported
   outside of any Space folder instead of being silently dropped.
 

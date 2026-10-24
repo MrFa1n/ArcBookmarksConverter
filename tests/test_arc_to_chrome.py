@@ -39,31 +39,41 @@ class ArcToChromeTests(unittest.TestCase):
         self.assertIn("<DT><H3>Personal</H3>", self.html)
 
     def test_folder_nesting_and_order_preserved_within_a_space(self) -> None:
-        # Inside "Work": Pinned folder, then "Research" (containing "Drafts"),
-        # then the "Dashboard" tab — in that source order.
+        # Inside "Work": the pinned "Mail" tab first, then "Research"
+        # (containing "Drafts"), then the "Dashboard" tab — in source order.
         work_start = self.html.index("<DT><H3>Work</H3>")
         personal_start = self.html.index("<DT><H3>Personal</H3>")
         work_section = self.html[work_start:personal_start]
 
-        pinned_pos = work_section.index("<DT><H3>Pinned</H3>")
+        mail_pos = work_section.index('HREF="https://example.com/mail"')
         research_pos = work_section.index("<DT><H3>Research</H3>")
         drafts_pos = work_section.index("<DT><H3>Drafts</H3>")
         dashboard_pos = work_section.index('HREF="https://example.com/dashboard"')
 
-        self.assertTrue(pinned_pos < research_pos < drafts_pos < dashboard_pos)
+        self.assertTrue(mail_pos < research_pos < drafts_pos < dashboard_pos)
 
-    def test_pinned_tab_lands_in_pinned_subfolder(self) -> None:
+    def test_pinned_tabs_are_flattened_into_the_space_folder(self) -> None:
+        # No extra "Pinned" wrapper folder anywhere in the output.
+        self.assertNotIn("<DT><H3>Pinned</H3>", self.html)
+
         work_start = self.html.index("<DT><H3>Work</H3>")
         personal_start = self.html.index("<DT><H3>Personal</H3>")
         work_section = self.html[work_start:personal_start]
         self.assertIn('HREF="https://example.com/mail"', work_section)
 
-    def test_space_without_pinned_tabs_has_no_pinned_folder(self) -> None:
+    def test_space_without_pinned_tabs_still_exports_its_other_tabs(self) -> None:
         personal_start = self.html.index("<DT><H3>Personal</H3>")
         personal_section = self.html[personal_start:]
-        # "Personal" has no pinned tabs in the fixture, so no Pinned subfolder.
-        self.assertNotIn("<DT><H3>Pinned</H3>", personal_section)
         self.assertIn('HREF="https://example.com/recipes"', personal_section)
+
+    def test_tab_pinned_directly_to_a_space_lands_in_that_spaces_folder(self) -> None:
+        # "tab-personal-pinned-direct" has parentID == the Space's own id
+        # (pinned straight to the Space, not in a folder, not in the
+        # "pinned" container) and must not fall into the fallback folder.
+        personal_start = self.html.index("<DT><H3>Personal</H3>")
+        personal_section = self.html[personal_start:]
+        self.assertIn('HREF="https://example.com/calendar"', personal_section)
+        self.assertNotIn("Arc — Shared Pinned", self.html)
 
     def test_orphan_tab_not_tied_to_any_space_still_exported(self) -> None:
         self.assertIn('HREF="https://example.com/orphan"', self.html)

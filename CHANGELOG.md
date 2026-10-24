@@ -11,8 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   sidebar (folders, pinned and regular tabs) to a Netscape bookmarks HTML file.
 - One top-level bookmarks folder per Arc Space, so the number of imported
   subfolders matches the number of Spaces in Arc, instead of one flat pile.
-- Pinned tabs for a Space are now carried over into a `Pinned` subfolder at
-  the top of that Space's folder.
+- Pinned tabs for a Space — including tabs pinned straight to the Space with
+  no folder — are carried over, flattened directly into that Space's folder
+  (listed first, no extra nesting level).
 - `tools/sanitize_arc.py` to redact a sidebar file before sharing it.
 - CLI arguments for input/output paths on both scripts (previously hardcoded).
 - Test suite (`tests/`) and a synthetic sample fixture (`examples/`).
