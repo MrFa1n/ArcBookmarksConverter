@@ -1,0 +1,144 @@
+{
+  "sidebar": {
+    "containers": [
+      {
+        "global": {}
+      },
+      {
+        "spaces": [
+          "space-work-key",
+          {
+            "id": "space-work-record-id",
+            "title": "Work"
+          },
+          "space-personal-key",
+          {
+            "id": "space-personal-record-id",
+            "title": "Personal",
+            "containerIDs": ["personal-declared-root"]
+          }
+        ],
+        "items": [
+          "work-root",
+          {
+            "id": "work-root",
+            "parentID": null,
+            "data": {
+              "itemContainer": {
+                "containerType": { "spaceItems": { "_0": "space-work-key" } }
+              }
+            }
+          },
+          "tab-work-mail",
+          {
+            "id": "tab-work-mail",
+            "parentID": "work-root",
+            "data": {
+              "tab": { "savedURL": "https://example.com/mail", "savedTitle": "Mail" }
+            }
+          },
+          "folder-work-research",
+          {
+            "id": "folder-work-research",
+            "parentID": "work-root",
+            "title": "Research",
+            "data": { "list": {} },
+            "childrenIds": ["folder-work-drafts", "tab-work-research-1"]
+          },
+          "tab-work-research-1",
+          {
+            "id": "tab-work-research-1",
+            "parentID": "folder-work-research",
+            "data": {
+              "tab": { "savedURL": "https://example.com/research1", "savedTitle": "Research Paper 1" }
+            }
+          },
+          "folder-work-drafts",
+          {
+            "id": "folder-work-drafts",
+            "parentID": "folder-work-research",
+            "title": "Drafts",
+            "data": { "list": {} }
+          },
+          "tab-work-draft-1",
+          {
+            "id": "tab-work-draft-1",
+            "parentID": "folder-work-drafts",
+            "data": {
+              "tab": { "savedURL": "https://example.com/draft1", "savedTitle": "Draft 1" }
+            }
+          },
+          "tab-work-dashboard",
+          {
+            "id": "tab-work-dashboard",
+            "parentID": "work-root",
+            "data": {
+              "tab": { "savedURL": "https://example.com/dashboard", "savedTitle": "Dashboard" }
+            }
+          },
+          "personal-declared-root",
+          {
+            "id": "personal-declared-root",
+            "parentID": null,
+            "data": {
+              "itemContainer": {
+                "containerType": { "spaceItems": { "_0": "space-personal-key" } }
+              }
+            }
+          },
+          "tab-personal-recipes",
+          {
+            "id": "tab-personal-recipes",
+            "parentID": "personal-declared-root",
+            "data": {
+              "tab": { "savedURL": "https://example.com/recipes", "savedTitle": "Recipes" }
+            }
+          },
+          "personal-extra-root",
+          {
+            "id": "personal-extra-root",
+            "parentID": null,
+            "data": {
+              "itemContainer": {
+                "containerType": { "spaceItems": { "_0": "space-personal-key" } }
+              }
+            }
+          },
+          "tab-personal-calendar",
+          {
+            "id": "tab-personal-calendar",
+            "parentID": "personal-extra-root",
+            "data": {
+              "tab": { "savedURL": "https://example.com/calendar", "savedTitle": "Calendar" }
+            }
+          },
+          "topapps-root",
+          {
+            "id": "topapps-root",
+            "parentID": null,
+            "data": {
+              "itemContainer": {
+                "containerType": { "topApps": { "_0": { "default": true } } }
+              }
+            }
+          },
+          "tab-shared-news",
+          {
+            "id": "tab-shared-news",
+            "parentID": "topapps-root",
+            "data": {
+              "tab": { "savedURL": "https://example.com/news", "savedTitle": "News" }
+            }
+          },
+          "tab-orphan",
+          {
+            "id": "tab-orphan",
+            "data": {
+              "tab": { "savedURL": "https://example.com/orphan", "savedTitle": "Orphan Tab" }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

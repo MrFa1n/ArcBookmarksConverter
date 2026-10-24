@@ -1,0 +1,17 @@
+# Arc source data and generated output — never commit real browsing data.
+StorableSidebar.json
+arc_bookmarks.html
+*.sanitized.json
+*.sanitized_*.json
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
