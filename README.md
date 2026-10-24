@@ -41,9 +41,18 @@ Requires Python 3.10+, no third-party dependencies.
 
 ### What gets exported
 
-- Regular Arc folders, preserved via their parent/child relationships.
-- Tabs that Arc's folder tree doesn't directly expose (e.g. pinned tabs living
-  in a virtual container) are collected into a fallback folder named
+- **One top-level folder per Arc Space**, named after that Space. Since
+  Chrome (and most browsers) nest an entire import under a single "Imported"
+  folder, this gives you exactly as many subfolders as you have Spaces in
+  Arc, instead of one giant flat pile.
+- Inside each Space's folder, the original folder nesting and order are
+  preserved exactly as in `StorableSidebar.json`.
+- **Pinned tabs** for a Space (if any) are collected into a `Pinned`
+  subfolder at the top of that Space's folder. A Space with no pinned tabs
+  gets no `Pinned` subfolder.
+- Tabs that can't be tied to any Space (orphaned/legacy records) are still
+  exported — top-level ones keep their own structure, and anything truly
+  unreachable is collected into a fallback folder named
   *"Arc — отдельные и закреплённые вкладки"* ("Arc — standalone and pinned
   tabs") so nothing gets silently dropped.
 - Duplicate entries (same ID, or same title+URL) are skipped.

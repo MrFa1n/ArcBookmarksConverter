@@ -7,9 +7,14 @@ Place this script next to StorableSidebar.json and run:
 Or pass explicit paths:
     python3 arc_to_chrome.py /path/to/StorableSidebar.json -o bookmarks.html
 
-Regular Arc folders are preserved where the parent/child relationships are available.
-Any tabs missed by the folder traversal (including pinned tabs that are not inside a
-folder) are collected into a final folder named "Arc — отдельные и закреплённые вкладки".
+The output has one top-level folder per Arc Space, named after that Space.
+Inside each Space folder, the original folder nesting and order are preserved
+exactly as in StorableSidebar.json. Pinned tabs for a Space (if any) are
+collected into a "Pinned" subfolder at the top of that Space's folder.
+
+Any tabs that can't be tied to a Space or a folder (orphaned records with no
+reachable parent) are collected into a final folder named
+"Arc — отдельные и закреплённые вкладки".
 """
 
 import argparse
@@ -21,6 +26,8 @@ from typing import Any
 DEFAULT_INPUT_FILE = Path("StorableSidebar.json")
 DEFAULT_OUTPUT_FILE = Path("arc_bookmarks.html")
 FALLBACK_FOLDER_TITLE = "Arc — отдельные и закреплённые вкладки"
+DEFAULT_SPACE_TITLE = "Arc Space"
+PINNED_FOLDER_TITLE = "Pinned"
 
 
 def records_from_pairs(value: Any) -> list[dict[str, Any]]:
@@ -40,6 +47,32 @@ def records_from_pairs(value: Any) -> list[dict[str, Any]]:
         else:
             i += 1
     return records
+
+
+def extract_space_root_containers(space: dict[str, Any]) -> list[tuple[str, str]]:
+    """Return [(marker, containerID), ...] for a space, preserving source order.
+
+    Arc pairs each space's root containers as alternating marker/ID entries,
+    e.g. containerIDs: ["pinned", "<uuid>", "unpinned", "<uuid>"], or the
+    equivalent newContainerIDs: [{"pinned": {}}, "<uuid>", {"unpinned": {...}}, "<uuid>"].
+    """
+    raw = space.get("containerIDs")
+    if isinstance(raw, list) and raw and all(isinstance(entry, str) for entry in raw):
+        pairs = list(zip(raw[0::2], raw[1::2]))
+        return [(marker, container_id) for marker, container_id in pairs if container_id]
+
+    pairs = []
+    raw = space.get("newContainerIDs")
+    if isinstance(raw, list):
+        marker: str | None = None
+        for entry in raw:
+            if isinstance(entry, dict) and len(entry) == 1:
+                marker = next(iter(entry))
+            elif isinstance(entry, str) and marker is not None:
+                if entry:
+                    pairs.append((marker, entry))
+                marker = None
+    return pairs
 
 
 def get_tab_data(item: dict[str, Any]) -> dict[str, Any]:
@@ -118,22 +151,18 @@ def main() -> None:
         if isinstance(item_id, str) and item_id:
             by_id[item_id] = item
 
+    # Group every item by its raw parentID, regardless of whether that parent
+    # is itself a record in sidebar.items — a Space's root containers (e.g. the
+    # "unpinned" container holding all of a Space's regular top-level tabs) are
+    # often referenced only from sidebar.spaces, not present as their own item.
     children_by_parent: dict[str, list[dict[str, Any]]] = {}
     roots: list[dict[str, Any]] = []
     for item in items:
         parent_id = item.get("parentID")
-        if isinstance(parent_id, str) and parent_id in by_id:
+        if isinstance(parent_id, str) and parent_id:
             children_by_parent.setdefault(parent_id, []).append(item)
         else:
             roots.append(item)
-
-    # Use space/container names where parent IDs correspond to a space container.
-    container_to_space: dict[str, str] = {}
-    for space in spaces:
-        space_title = str(space.get("title") or "Arc")
-        for container_id in space.get("containerIDs", []):
-            if isinstance(container_id, str):
-                container_to_space[container_id] = space_title
 
     lines = [
         "<!DOCTYPE NETSCAPE-Bookmark-file-1>",
@@ -165,7 +194,7 @@ def main() -> None:
         exported_urls.add(key)
         return True
 
-    def emit_item(item: dict[str, Any], indent: int = 1) -> None:
+    def emit_item(item: dict[str, Any], indent: int) -> None:
         item_id = item.get("id")
         if isinstance(item_id, str):
             if item_id in visited:
@@ -177,9 +206,8 @@ def main() -> None:
             # A URL-bearing item is a tab, not a folder; still don't drop any children
             # if an unusual Arc record has both a URL and child IDs.
             descendants = children_by_parent.get(str(item_id), []) if item_id else []
-            if descendants:
-                for child in descendants:
-                    emit_item(child, indent)
+            for child in descendants:
+                emit_item(child, indent)
             return
 
         descendants = children_by_parent.get(str(item_id), []) if item_id else []
@@ -193,13 +221,61 @@ def main() -> None:
                 emit_item(child, indent + 1)
             lines.append(f"{prefix}</DL><p>")
 
-    # First pass: preserve the hierarchy represented by parentID.
-    for root in roots:
-        emit_item(root)
+    def emit_children(container_id: str, indent: int) -> None:
+        visited.add(container_id)
+        for child in children_by_parent.get(container_id, []):
+            emit_item(child, indent)
 
-    # Fallback pass: export every URL-bearing tab that was not reached by the tree.
-    # This is what captures pinned/standalone tabs whose parent is a virtual Arc
-    # container rather than another record in sidebar.items.
+    # First pass: one top-level folder per Arc Space, so the number of folders
+    # under the imported root matches the number of Spaces in Arc. Within each
+    # Space folder, the original nesting/order is preserved as-is; pinned tabs
+    # (if any) are collected into a "Pinned" subfolder at the top.
+    used_space_titles: dict[str, int] = {}
+    for space in spaces:
+        space_title = str(space.get("title") or "").strip() or DEFAULT_SPACE_TITLE
+        seen_count = used_space_titles.get(space_title, 0)
+        used_space_titles[space_title] = seen_count + 1
+        display_title = space_title if seen_count == 0 else f"{space_title} ({seen_count + 1})"
+
+        root_containers = extract_space_root_containers(space)
+        pinned_container_id: str | None = None
+        other_container_ids: list[str] = []
+        for marker, container_id in root_containers:
+            if marker == "pinned" and pinned_container_id is None:
+                pinned_container_id = container_id
+            else:
+                other_container_ids.append(container_id)
+
+        lines.append(f'    <DT><H3>{html.escape(display_title)}</H3>')
+        lines.append("    <DL><p>")
+
+        if pinned_container_id:
+            pinned_children = children_by_parent.get(pinned_container_id, [])
+            visited.add(pinned_container_id)
+            if pinned_children:
+                lines.append(f'        <DT><H3>{html.escape(PINNED_FOLDER_TITLE)}</H3>')
+                lines.append("        <DL><p>")
+                for child in pinned_children:
+                    emit_item(child, 3)
+                lines.append("        </DL><p>")
+
+        for container_id in other_container_ids:
+            emit_children(container_id, 2)
+
+        lines.append("    </DL><p>")
+
+    # Second pass: anything left over at the top level that isn't tied to any
+    # Space (e.g. an unusual/legacy record) still keeps its own structure.
+    for root in roots:
+        root_id = root.get("id")
+        if isinstance(root_id, str) and root_id in visited:
+            continue
+        emit_item(root, 1)
+
+    # Fallback pass: export every URL-bearing tab that was not reached by the
+    # tree above. This catches tabs whose parent is a virtual Arc container
+    # not referenced by any Space (legacy data, etc.), so nothing is silently
+    # dropped.
     missing_tabs = [
         item for item in items
         if get_url(item)
@@ -217,6 +293,7 @@ def main() -> None:
 
     total_tabs = sum(1 for item in items if get_url(item))
     print(f"Элементов Arc в списке: {len(items)}")
+    print(f"Spaces найдено: {len(spaces)}")
     print(f"Вкладок со ссылкой найдено: {total_tabs}")
     print(f"Закладок экспортировано: {len(exported_ids) + sum(1 for item in items if not item.get('id') and get_url(item))}")
     print(f"Не вошло в основное дерево и добавлено в отдельную папку: {len(missing_tabs)}")
