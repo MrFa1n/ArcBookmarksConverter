@@ -46,15 +46,23 @@ Requires Python 3.10+, no third-party dependencies.
   folder, this gives you exactly as many subfolders as you have Spaces in
   Arc, instead of one giant flat pile.
 - Inside each Space's folder, the original folder nesting and order are
-  preserved exactly as in `StorableSidebar.json`.
-- **Pinned tabs** for a Space (if any) are listed first, flattened directly
-  into that Space's folder — no extra "Pinned" subfolder layer.
-- **Tabs pinned straight to a Space** (not inside a folder, not in the
-  "pinned" container either) are also picked up and placed into that Space's
-  folder.
-- Tabs that still can't be tied to any Space are collected into a fallback
-  folder named *"Arc — Shared Pinned"*, so nothing gets silently dropped.
+  preserved exactly as in `StorableSidebar.json`, with every root container
+  Arc keeps for that Space (there's often more than one) flattened directly
+  in — no extra wrapper subfolder.
+- **Arc's "Top Apps" row** (the small favicon-only tabs shown identically
+  under every Space — shared rather than owned by any one of them) gets its
+  own top-level folder named *"Arc — Shared Pinned"*.
+- Anything that still can't be tied to a Space or a folder goes into a last
+  fallback folder named *"Arc — отдельные вкладки"*, so nothing is silently
+  dropped.
 - Duplicate entries (same ID, or same title+URL) are skipped.
+
+Arc's `StorableSidebar.json` doesn't always label things the way you'd
+expect from the UI (e.g. a Space's container list mixes marker words like
+`"pinned"`/`"unpinned"` in with real container IDs, inconsistently). To stay
+robust against that, the exporter identifies each root container by its own
+declared type (`data.itemContainer.containerType`) rather than trusting
+those marker words.
 
 ## Sanitizing a sidebar file before sharing it
 

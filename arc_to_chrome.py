@@ -9,13 +9,14 @@ Or pass explicit paths:
 
 The output has one top-level folder per Arc Space, named after that Space.
 Inside each Space folder, the original folder nesting and order are preserved
-exactly as in StorableSidebar.json. Pinned tabs for a Space (if any) are
-listed first, flattened directly into that Space's folder (no extra
-"Pinned" subfolder).
+exactly as in StorableSidebar.json, with every root container that belongs to
+that Space (however many Arc keeps — pinned, regular, etc.) flattened
+directly into it, no extra wrapper subfolder.
 
-Any tabs that still can't be tied to a Space (not inside a folder, not
-pinned, not pinned-to-space) are collected into a final folder named
-"Arc — Shared Pinned".
+Arc's "Top Apps" row (shown identically under every Space, shared rather than
+owned by any one of them) is collected into its own top-level folder named
+"Arc — Shared Pinned". Anything that still can't be tied to a Space or a
+folder goes into a final folder named "Arc — отдельные вкладки".
 """
 
 import argparse
@@ -26,7 +27,8 @@ from typing import Any
 
 DEFAULT_INPUT_FILE = Path("StorableSidebar.json")
 DEFAULT_OUTPUT_FILE = Path("arc_bookmarks.html")
-FALLBACK_FOLDER_TITLE = "Arc — Shared Pinned"
+FALLBACK_FOLDER_TITLE = "Arc — отдельные вкладки"
+SHARED_PINNED_FOLDER_TITLE = "Arc — Shared Pinned"
 DEFAULT_SPACE_TITLE = "Arc Space"
 
 
@@ -49,30 +51,93 @@ def records_from_pairs(value: Any) -> list[dict[str, Any]]:
     return records
 
 
-def extract_space_root_containers(space: dict[str, Any]) -> list[tuple[str, str]]:
-    """Return [(marker, containerID), ...] for a space, preserving source order.
+def parse_spaces(raw: Any) -> list[dict[str, Any]]:
+    """Like records_from_pairs, but also keeps the pairs-list key as "spaceKey".
 
-    Arc pairs each space's root containers as alternating marker/ID entries,
-    e.g. containerIDs: ["pinned", "<uuid>", "unpinned", "<uuid>"], or the
-    equivalent newContainerIDs: [{"pinned": {}}, "<uuid>", {"unpinned": {...}}, "<uuid>"].
+    A Space's own "id" field and the key Arc uses to reference that Space
+    elsewhere (e.g. an itemContainer's containerType.spaceItems._0) can be
+    two different values. spaceKey is the one other records actually point to.
     """
-    raw = space.get("containerIDs")
-    if isinstance(raw, list) and raw and all(isinstance(entry, str) for entry in raw):
-        pairs = list(zip(raw[0::2], raw[1::2]))
-        return [(marker, container_id) for marker, container_id in pairs if container_id]
+    records: list[dict[str, Any]] = []
+    if not isinstance(raw, list):
+        return records
 
-    pairs = []
-    raw = space.get("newContainerIDs")
-    if isinstance(raw, list):
-        marker: str | None = None
-        for entry in raw:
-            if isinstance(entry, dict) and len(entry) == 1:
-                marker = next(iter(entry))
-            elif isinstance(entry, str) and marker is not None:
-                if entry:
-                    pairs.append((marker, entry))
-                marker = None
-    return pairs
+    i = 0
+    while i < len(raw):
+        if i + 1 < len(raw) and isinstance(raw[i + 1], dict):
+            record = dict(raw[i + 1])
+            key = raw[i] if isinstance(raw[i], str) else None
+            if key:
+                record["spaceKey"] = key
+                record.setdefault("id", key)
+            records.append(record)
+            i += 2
+        else:
+            i += 1
+    return records
+
+
+def collect_container_index(
+    items: list[dict[str, Any]],
+) -> tuple[list[str], dict[str, list[str]]]:
+    """Find Arc's root containers via their own declared type.
+
+    Each root container (pinned row, regular tab tree, Top Apps, ...) is
+    itself a record in sidebar.items with data.itemContainer.containerType
+    saying what it is. This is more reliable than a Space's
+    containerIDs/newContainerIDs lists: the marker words in those ("pinned",
+    "unpinned") don't reliably correspond to meaningful categories, and
+    containerIDs in particular isn't consistently ordered/paired.
+
+    Returns (topapps_container_ids, {space_key: [container_id, ...]}).
+    """
+    topapps_ids: list[str] = []
+    spaceitems_by_key: dict[str, list[str]] = {}
+
+    for item in items:
+        item_id = item.get("id")
+        if not isinstance(item_id, str):
+            continue
+        data = item.get("data")
+        if not isinstance(data, dict):
+            continue
+        container = data.get("itemContainer")
+        if not isinstance(container, dict):
+            continue
+        container_type = container.get("containerType")
+        if not isinstance(container_type, dict):
+            continue
+
+        if "topApps" in container_type:
+            topapps_ids.append(item_id)
+
+        space_items = container_type.get("spaceItems")
+        if isinstance(space_items, dict):
+            space_key = space_items.get("_0")
+            if isinstance(space_key, str):
+                spaceitems_by_key.setdefault(space_key, []).append(item_id)
+
+    return topapps_ids, spaceitems_by_key
+
+
+def extract_declared_container_ids(
+    space: dict[str, Any], by_id: dict[str, Any]
+) -> list[str]:
+    """Container ids a Space explicitly lists, in source order.
+
+    Arc mixes marker words ("pinned"/"unpinned") into these lists alongside
+    the actual container ids. Rather than rely on their exact pairing (which
+    has proven inconsistent across exports), just keep whichever entries are
+    actually items in sidebar.items.
+    """
+    for key in ("newContainerIDs", "containerIDs"):
+        raw = space.get(key)
+        if not isinstance(raw, list):
+            continue
+        ids = [entry for entry in raw if isinstance(entry, str) and entry in by_id]
+        if ids:
+            return ids
+    return []
 
 
 def get_tab_data(item: dict[str, Any]) -> dict[str, Any]:
@@ -140,7 +205,7 @@ def main() -> None:
 
     sidebar = containers[1]
     items = records_from_pairs(sidebar.get("items", []))
-    spaces = records_from_pairs(sidebar.get("spaces", []))
+    spaces = parse_spaces(sidebar.get("spaces", []))
 
     if not items:
         raise SystemExit("В sidebar.items не найдены элементы Arc.")
@@ -151,10 +216,12 @@ def main() -> None:
         if isinstance(item_id, str) and item_id:
             by_id[item_id] = item
 
+    topapps_container_ids, spaceitems_by_key = collect_container_index(items)
+
     # Group every item by its raw parentID, regardless of whether that parent
     # is itself a record in sidebar.items — a Space's root containers (e.g. the
-    # "unpinned" container holding all of a Space's regular top-level tabs) are
-    # often referenced only from sidebar.spaces, not present as their own item.
+    # container holding all of a Space's regular top-level tabs) are often
+    # referenced only from sidebar.spaces, not present as their own item.
     children_by_parent: dict[str, list[dict[str, Any]]] = {}
     roots: list[dict[str, Any]] = []
     for item in items:
@@ -228,8 +295,8 @@ def main() -> None:
 
     # First pass: one top-level folder per Arc Space, so the number of folders
     # under the imported root matches the number of Spaces in Arc. Within each
-    # Space folder, the original nesting/order is preserved as-is; pinned tabs
-    # (if any) are listed first, flattened directly into the Space folder.
+    # Space folder, every root container belonging to that Space is flattened
+    # directly in, preserving each container's own nesting/order as-is.
     used_space_titles: dict[str, int] = {}
     for space in spaces:
         space_title = str(space.get("title") or "").strip() or DEFAULT_SPACE_TITLE
@@ -237,37 +304,34 @@ def main() -> None:
         used_space_titles[space_title] = seen_count + 1
         display_title = space_title if seen_count == 0 else f"{space_title} ({seen_count + 1})"
 
-        root_containers = extract_space_root_containers(space)
-        pinned_container_id: str | None = None
-        other_container_ids: list[str] = []
-        for marker, container_id in root_containers:
-            if marker == "pinned" and pinned_container_id is None:
-                pinned_container_id = container_id
-            else:
-                other_container_ids.append(container_id)
+        container_ids = extract_declared_container_ids(space, by_id)
+        space_key = space.get("spaceKey") or space.get("id")
+        if isinstance(space_key, str):
+            for container_id in spaceitems_by_key.get(space_key, []):
+                if container_id not in container_ids:
+                    container_ids.append(container_id)
 
         lines.append(f'    <DT><H3>{html.escape(display_title)}</H3>')
         lines.append("    <DL><p>")
-
-        # Pinned tabs go first, flattened directly into the Space folder —
-        # no extra "Pinned" wrapper folder, matching how Arc shows them.
-        if pinned_container_id:
-            emit_children(pinned_container_id, 2)
-
-        # Some tabs are pinned straight to the Space itself rather than to
-        # its "pinned" container or living inside a folder — their parentID
-        # is the Space's own id. Pick those up too instead of letting them
-        # fall through to the generic fallback folder below.
-        space_id = space.get("id")
-        if isinstance(space_id, str) and space_id:
-            emit_children(space_id, 2)
-
-        for container_id in other_container_ids:
+        for container_id in container_ids:
             emit_children(container_id, 2)
-
         lines.append("    </DL><p>")
 
-    # Second pass: anything left over at the top level that isn't tied to any
+    # Second pass: Arc's "Top Apps" row is shown identically under every
+    # Space, but it isn't owned by any one of them (it's a single shared
+    # container, not referenced from any Space's own container list) — give
+    # it its own top-level folder instead of letting it leak into the
+    # generic fallback folder below.
+    for container_id in topapps_container_ids:
+        visited.add(container_id)
+    if any(children_by_parent.get(cid) for cid in topapps_container_ids):
+        lines.append(f'    <DT><H3>{html.escape(SHARED_PINNED_FOLDER_TITLE)}</H3>')
+        lines.append("    <DL><p>")
+        for container_id in topapps_container_ids:
+            emit_children(container_id, 2)
+        lines.append("    </DL><p>")
+
+    # Third pass: anything left over at the top level that isn't tied to any
     # Space (e.g. an unusual/legacy record) still keeps its own structure.
     for root in roots:
         root_id = root.get("id")
@@ -276,9 +340,7 @@ def main() -> None:
         emit_item(root, 1)
 
     # Fallback pass: export every URL-bearing tab that was not reached by the
-    # tree above. This catches tabs whose parent is a virtual Arc container
-    # not referenced by any Space (legacy data, etc.), so nothing is silently
-    # dropped.
+    # tree above, so nothing is silently dropped.
     missing_tabs = [
         item for item in items
         if get_url(item)

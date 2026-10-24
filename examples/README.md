@@ -11,14 +11,21 @@ can't anonymize those without breaking them (which is also why
 docstring). A synthetic fixture lets us keep that structure both correct and
 easy to read.
 
-It models two Arc Spaces ("Work" and "Personal") to exercise:
+It models the real `data.itemContainer.containerType` shape Arc uses for
+root containers (`spaceItems` per Space, `topApps` shared globally) rather
+than the Space's own `containerIDs`/`newContainerIDs` lists, which have
+proven unreliable (see `arc_to_chrome.py`'s docstring). It exercises:
 
 - one top-level folder per Space, each named after the Space;
 - nested folders preserved in source order (`Work` → `Research` → `Drafts`);
-- a pinned tab (`Work`'s "Mail") flattened directly into the Space folder,
-  listed first, with no extra `Pinned` subfolder;
-- a tab pinned straight to a Space with no folder and no "pinned" container
-  (`Personal`'s "Calendar", `parentID` == the Space's own id);
+- a pinned-like tab (`Work`'s "Mail") flattened directly into the Space
+  folder, listed first, with no extra `Pinned` subfolder — `Work`'s whole
+  container is found purely via the `itemContainer` scan (no
+  `containerIDs`/`newContainerIDs` field on that Space at all);
+- a second root container for `Personal` ("Calendar") that *isn't* listed
+  in its `containerIDs`, to prove such containers are still picked up;
+- Arc's "Top Apps" row (`tab-shared-news`), shared across Spaces rather
+  than owned by one, landing in its own `Arc — Shared Pinned` folder;
 - a tab with no reachable parent (`tab-orphan`), which still gets exported
   outside of any Space folder instead of being silently dropped.
 

@@ -29,7 +29,7 @@ TITLE_KEYS = {
 }
 SENSITIVE_KEY_PARTS = {
     "id", "uuid", "guid", "token", "cookie", "password",
-    "email", "username", "account", "profile", "path",
+    "email", "username", "account", "profile", "path", "device",
 }
 
 
@@ -72,7 +72,26 @@ class Sanitizer:
             return {k: self.sanitize(v, k) for k, v in value.items()}
 
         if isinstance(value, list):
-            return [self.sanitize(item, key) for item in value]
+            result = []
+            for index, item in enumerate(value):
+                if (
+                    isinstance(item, str)
+                    and index + 1 < len(value)
+                    and isinstance(value[index + 1], dict)
+                ):
+                    # Arc encodes many collections as alternating
+                    # [id, object, id, object, ...] — this string plays the
+                    # same role as a dict's "id" field even though it isn't
+                    # nested under that key name, so it needs the same
+                    # redaction. Without this, these ids inherit the parent
+                    # list's own key (e.g. "spaces", "items"), which doesn't
+                    # match the sensitive-key check below and leaks through.
+                    result.append(
+                        self._lookup(self._id_map, item, lambda n: f"REDACTED_VALUE_{n}")
+                    )
+                else:
+                    result.append(self.sanitize(item, key))
+            return result
 
         if not isinstance(value, str):
             return value

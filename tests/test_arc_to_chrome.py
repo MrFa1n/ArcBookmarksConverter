@@ -39,8 +39,10 @@ class ArcToChromeTests(unittest.TestCase):
         self.assertIn("<DT><H3>Personal</H3>", self.html)
 
     def test_folder_nesting_and_order_preserved_within_a_space(self) -> None:
-        # Inside "Work": the pinned "Mail" tab first, then "Research"
-        # (containing "Drafts"), then the "Dashboard" tab — in source order.
+        # Inside "Work": "Mail" first, then "Research" (containing
+        # "Drafts"), then the "Dashboard" tab — in source order. "Work"'s
+        # containers are discovered purely via itemContainer scanning (no
+        # containerIDs/newContainerIDs field at all on that Space record).
         work_start = self.html.index("<DT><H3>Work</H3>")
         personal_start = self.html.index("<DT><H3>Personal</H3>")
         work_section = self.html[work_start:personal_start]
@@ -52,28 +54,37 @@ class ArcToChromeTests(unittest.TestCase):
 
         self.assertTrue(mail_pos < research_pos < drafts_pos < dashboard_pos)
 
-    def test_pinned_tabs_are_flattened_into_the_space_folder(self) -> None:
-        # No extra "Pinned" wrapper folder anywhere in the output.
+    def test_container_not_listed_in_containerids_is_still_picked_up(self) -> None:
+        # "Personal" only declares "personal-declared-root" in containerIDs;
+        # "personal-extra-root" (holding the "Calendar" tab) is a second
+        # spaceItems container for the same Space, found only via the
+        # itemContainer scan, and must still land inside "Personal".
+        personal_start = self.html.index("<DT><H3>Personal</H3>")
+        shared_pinned_start = self.html.index("<DT><H3>Arc — Shared Pinned</H3>")
+        personal_section = self.html[personal_start:shared_pinned_start]
+        self.assertIn('HREF="https://example.com/recipes"', personal_section)
+        self.assertIn('HREF="https://example.com/calendar"', personal_section)
+
+    def test_pinned_like_tab_is_flattened_with_no_extra_subfolder(self) -> None:
+        # No "Pinned" wrapper folder anywhere in the output — pinned-ish
+        # tabs are listed directly inside their Space's folder.
         self.assertNotIn("<DT><H3>Pinned</H3>", self.html)
+
+    def test_top_apps_go_into_their_own_shared_pinned_folder(self) -> None:
+        # Arc's global "Top Apps" row isn't owned by either Space, so it
+        # gets its own top-level folder instead of leaking into a generic
+        # "Папка Arc" folder or either Space's folder.
+        self.assertIn("<DT><H3>Arc — Shared Pinned</H3>", self.html)
+        shared_pinned_start = self.html.index("<DT><H3>Arc — Shared Pinned</H3>")
+        shared_pinned_section = self.html[shared_pinned_start:]
+        self.assertIn('HREF="https://example.com/news"', shared_pinned_section)
 
         work_start = self.html.index("<DT><H3>Work</H3>")
         personal_start = self.html.index("<DT><H3>Personal</H3>")
-        work_section = self.html[work_start:personal_start]
-        self.assertIn('HREF="https://example.com/mail"', work_section)
-
-    def test_space_without_pinned_tabs_still_exports_its_other_tabs(self) -> None:
-        personal_start = self.html.index("<DT><H3>Personal</H3>")
-        personal_section = self.html[personal_start:]
-        self.assertIn('HREF="https://example.com/recipes"', personal_section)
-
-    def test_tab_pinned_directly_to_a_space_lands_in_that_spaces_folder(self) -> None:
-        # "tab-personal-pinned-direct" has parentID == the Space's own id
-        # (pinned straight to the Space, not in a folder, not in the
-        # "pinned" container) and must not fall into the fallback folder.
-        personal_start = self.html.index("<DT><H3>Personal</H3>")
-        personal_section = self.html[personal_start:]
-        self.assertIn('HREF="https://example.com/calendar"', personal_section)
-        self.assertNotIn("Arc — Shared Pinned", self.html)
+        self.assertNotIn('HREF="https://example.com/news"', self.html[work_start:personal_start])
+        self.assertNotIn(
+            'HREF="https://example.com/news"', self.html[personal_start:shared_pinned_start]
+        )
 
     def test_orphan_tab_not_tied_to_any_space_still_exported(self) -> None:
         self.assertIn('HREF="https://example.com/orphan"', self.html)
