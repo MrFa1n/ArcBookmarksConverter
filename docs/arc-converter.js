@@ -1,7 +1,7 @@
 /**
  * Arc StorableSidebar.json -> Netscape bookmarks HTML, in pure client-side JS.
  *
- * This is a line-for-line port of arc_to_chrome.py at the repo root — keep
+ * This is a line-for-line port of arc_to_bookmarks.py at the repo root — keep
  * the two in sync. See that file's docstrings for why each step exists
  * (containers identified by data.itemContainer.containerType rather than
  * marker words, childrenIds as the authoritative order, Top Apps handling,
@@ -373,5 +373,5 @@
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;
   }
-  global.ArcToChrome = api;
+  global.ArcBookmarksConverter = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -1,4 +1,4 @@
-# Arc to Chrome Bookmarks
+# Arc Bookmarks Converter
 
 Экспорт боковой панели [браузера Arc](https://arc.net/) (пространства, папки,
 закреплённые и обычные вкладки) в стандартный файл закладок формата Netscape
@@ -41,11 +41,11 @@ Arc закрывается / вы переходите на другой бра�
    ```
 2. Запустите экспорт:
    ```bash
-   python3 arc_to_chrome.py "/путь/к/StorableSidebar.json" -o arc_bookmarks.html
+   python3 arc_to_bookmarks.py "/путь/к/StorableSidebar.json" -o arc_bookmarks.html
    ```
    Либо, если положить `StorableSidebar.json` рядом со скриптом, просто:
    ```bash
-   python3 arc_to_chrome.py
+   python3 arc_to_bookmarks.py
    ```
 3. Импортируйте `arc_bookmarks.html` в новый браузер:
    - **Chrome**: `chrome://bookmarks` → меню ⋮ → _Импортировать закладки_
@@ -98,7 +98,7 @@ python3 tools/sanitize_arc.py StorableSidebar.json -o StorableSidebar.sanitized.
 ## Структура проекта
 
 ```
-arc_to_chrome.py        # экспортёр — StorableSidebar.json -> HTML с закладками
+arc_to_bookmarks.py     # экспортёр — StorableSidebar.json -> HTML с закладками
 tools/sanitize_arc.py   # редактирует файл перед тем, как им поделиться
 docs/                    # веб-версия для GitHub Pages (та же логика, порт на JS)
 examples/                # санитизированный пример StorableSidebar.json для тестов

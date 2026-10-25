@@ -7,8 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
-- Initial public release: `arc_to_chrome.py` exports Arc's `StorableSidebar.json`
+- Initial public release: `arc_to_bookmarks.py` exports Arc's `StorableSidebar.json`
   sidebar (folders, pinned and regular tabs) to a Netscape bookmarks HTML file.
+  (Project and script renamed from ArcToHtml/`arc_to_chrome.py` to
+  ArcBookmarksConverter/`arc_to_bookmarks.py` — the output has always been a
+  generic bookmarks file any browser can import, not just Chrome.)
 - One top-level bookmarks folder per Arc Space, so the number of imported
   subfolders matches the number of Spaces in Arc, instead of one flat pile.
   Every root container Arc keeps for a Space (there's often more than one)
@@ -27,7 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - A GitHub Pages web version (`docs/`): drop in `StorableSidebar.json`,
   get `arc_bookmarks.html` back, entirely client-side (no upload, no
   server). `docs/arc-converter.js` is a function-for-function port of
-  `arc_to_chrome.py`, verified to produce byte-identical output. The page
+  `arc_to_bookmarks.py`, verified to produce byte-identical output. The page
   has a light/dark theme toggle (defaults to system preference) and an
   EN/RU language switcher (defaults to browser language), both persisted
   per-visitor via `localStorage`.

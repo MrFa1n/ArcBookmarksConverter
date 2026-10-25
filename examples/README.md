@@ -14,7 +14,7 @@ easy to read.
 It models the real `data.itemContainer.containerType` shape Arc uses for
 root containers (`spaceItems` per Space, `topApps` shared globally) rather
 than the Space's own `containerIDs`/`newContainerIDs` lists, which have
-proven unreliable (see `arc_to_chrome.py`'s docstring). It exercises:
+proven unreliable (see `arc_to_bookmarks.py`'s docstring). It exercises:
 
 - one top-level folder per Space, each named after the Space;
 - nested folders preserved in source order (`Work` → `Research` → `Drafts`);
@@ -32,5 +32,5 @@ proven unreliable (see `arc_to_chrome.py`'s docstring). It exercises:
 - a tab with no reachable parent (`tab-orphan`), which still gets exported
   outside of any Space folder instead of being silently dropped.
 
-`tests/test_arc_to_chrome.py` runs the exporter against this fixture and
+`tests/test_arc_to_bookmarks.py` runs the exporter against this fixture and
 asserts on exactly this structure.

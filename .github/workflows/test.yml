@@ -29,9 +29,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Verify docs/arc-converter.js matches arc_to_chrome.py output
+      - name: Verify docs/arc-converter.js matches arc_to_bookmarks.py output
         run: |
-          python3 arc_to_chrome.py examples/StorableSidebar.example.json -o /tmp/py.html
+          python3 arc_to_bookmarks.py examples/StorableSidebar.example.json -o /tmp/py.html
           node -e '
             const { convertArcSidebarToBookmarksHtml } = require("./docs/arc-converter.js");
             const fs = require("fs");

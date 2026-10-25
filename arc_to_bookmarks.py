@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Export Arc's StorableSidebar.json to Chrome-importable bookmarks HTML.
+"""Export Arc's StorableSidebar.json to a standard bookmarks HTML file that
+any browser (Chrome, Firefox, Safari, Edge, Brave, etc.) can import.
 
 Place this script next to StorableSidebar.json and run:
-    python3 arc_to_chrome.py
+    python3 arc_to_bookmarks.py
 
 Or pass explicit paths:
-    python3 arc_to_chrome.py /path/to/StorableSidebar.json -o bookmarks.html
+    python3 arc_to_bookmarks.py /path/to/StorableSidebar.json -o bookmarks.html
 
 The output has one top-level folder per Arc Space, named after that Space.
 Inside each Space folder, the original folder nesting and order are preserved
@@ -224,7 +225,7 @@ def main() -> None:
     if not input_file.exists():
         raise SystemExit(
             f"Не найден файл {input_file}. Положи StorableSidebar.json рядом со скриптом "
-            "или укажи путь явно: arc_to_chrome.py /путь/к/StorableSidebar.json"
+            "или укажи путь явно: arc_to_bookmarks.py /путь/к/StorableSidebar.json"
         )
 
     with input_file.open("r", encoding="utf-8") as file:
@@ -395,7 +396,7 @@ def main() -> None:
     print(f"Закладок экспортировано: {len(exported_ids) + sum(1 for item in items if not item.get('id') and get_url(item))}")
     print(f"Не вошло в основное дерево и добавлено в отдельную папку: {len(missing_tabs)}")
     print(f"Файл создан: {output_file.resolve()}")
-    print("Импорт в Chrome: Диспетчер закладок → меню ⋮ → Импортировать закладки → arc_bookmarks.html")
+    print("Импорт: в диспетчере закладок твоего браузера выбери «Импортировать закладки» и укажи arc_bookmarks.html")
 
 
 if __name__ == "__main__":

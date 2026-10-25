@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = ROOT / "arc_to_chrome.py"
+SCRIPT = ROOT / "arc_to_bookmarks.py"
 EXAMPLE = ROOT / "examples" / "StorableSidebar.example.json"
 
 
@@ -19,7 +19,7 @@ def run_exporter(input_file: Path, output_file: Path) -> subprocess.CompletedPro
     )
 
 
-class ArcToChromeTests(unittest.TestCase):
+class ArcToBookmarksTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)

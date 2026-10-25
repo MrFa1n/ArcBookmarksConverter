@@ -6,7 +6,7 @@
   const statusEl = document.getElementById('status');
   const themeToggle = document.getElementById('themeToggle');
 
-  const THEME_KEY = 'arc2chrome-theme';
+  const THEME_KEY = 'arcbm-theme';
 
   // --- theme --------------------------------------------------------
 
@@ -161,10 +161,10 @@
       }
 
       try {
-        const { html, stats } = window.ArcToChrome.convertArcSidebarToBookmarksHtml(source);
+        const { html, stats } = window.ArcBookmarksConverter.convertArcSidebarToBookmarksHtml(source);
         showResult(file.name, html, stats);
       } catch (err) {
-        if (err instanceof window.ArcToChrome.ArcFormatError) {
+        if (err instanceof window.ArcBookmarksConverter.ArcFormatError) {
           const key = err.code === 'NO_ITEMS' ? 'errNoItems' : 'errNotArcFile';
           showMessage('err', t(key));
         } else {

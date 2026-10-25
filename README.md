@@ -1,4 +1,4 @@
-# Arc to Chrome Bookmarks
+# Arc Bookmarks Converter
 
 Export [Arc browser](https://arc.net/)'s sidebar (spaces, folders, pinned and
 regular tabs) into a standard Netscape bookmarks HTML file that any browser —
@@ -39,11 +39,11 @@ Requires Python 3.10+, no third-party dependencies.
    ```
 2. Run the exporter:
    ```bash
-   python3 arc_to_chrome.py "/path/to/StorableSidebar.json" -o arc_bookmarks.html
+   python3 arc_to_bookmarks.py "/path/to/StorableSidebar.json" -o arc_bookmarks.html
    ```
    Or, if you copy `StorableSidebar.json` next to the script, just:
    ```bash
-   python3 arc_to_chrome.py
+   python3 arc_to_bookmarks.py
    ```
 3. Import `arc_bookmarks.html` into your new browser:
    - **Chrome**: `chrome://bookmarks` → ⋮ menu → _Import bookmarks_
@@ -95,7 +95,7 @@ best-effort filter, not a guarantee.
 ## Project layout
 
 ```
-arc_to_chrome.py        # the exporter — StorableSidebar.json -> bookmarks HTML
+arc_to_bookmarks.py     # the exporter — StorableSidebar.json -> bookmarks HTML
 tools/sanitize_arc.py   # redacts a sidebar file before sharing it
 docs/                    # the GitHub Pages web version (same logic, ported to JS)
 examples/                # a sanitized sample StorableSidebar.json for testing

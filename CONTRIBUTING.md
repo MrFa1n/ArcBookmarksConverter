@@ -16,7 +16,7 @@ python3 -m unittest discover -s tests -v
 ## Reporting a bug
 
 Arc's internal JSON structure has a lot of quirks (virtual containers,
-pairwise-encoded lists, inconsistent nesting). If `arc_to_chrome.py` mishandles
+pairwise-encoded lists, inconsistent nesting). If `arc_to_bookmarks.py` mishandles
 your sidebar, please open an issue and include:
 
 1. What went wrong (missing tabs, wrong folder structure, a crash/traceback).
@@ -42,7 +42,7 @@ small as possible while still reproducing the issue.
   python3 -m unittest discover -s tests -v
   ```
 - Describe _why_ the change is needed, not just what it does.
-- If the change touches `arc_to_chrome.py`'s conversion logic, mirror it in
+- If the change touches `arc_to_bookmarks.py`'s conversion logic, mirror it in
   `docs/arc-converter.js` (the GitHub Pages web version) and re-verify the
   two produce identical output — see `docs/README.md` for the diff command.
 

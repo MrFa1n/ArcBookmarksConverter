@@ -4,14 +4,14 @@
  *
  * The literal folder names arc-converter.js writes into the OUTPUT bookmarks
  * file ("Arc — Shared Pinned", "Arc — отдельные вкладки") are NOT
- * translated here — they match arc_to_chrome.py's output regardless of the
+ * translated here — they match arc_to_bookmarks.py's output regardless of the
  * page's UI language, so the web and CLI versions always produce identical
  * files.
  */
 (function (global) {
   "use strict";
 
-  const STORAGE_KEY = "arc2chrome-lang";
+  const STORAGE_KEY = "arcbm-lang";
 
   const STRINGS = {
     en: {
@@ -52,7 +52,7 @@
       ],
       howtoNote: 'Either way, your Spaces show up as folders under "Imported".',
       footer:
-        '<a href="https://github.com/MrFa1n/ArcBookmarksConverter">ArcBookmarksConverter</a> · Apache License 2.0 · runs the same conversion as the <a href="https://github.com/MrFa1n/ArcBookmarksConverter/blob/main/arc_to_chrome.py">Python CLI</a>',
+        '<a href="https://github.com/MrFa1n/ArcBookmarksConverter">ArcBookmarksConverter</a> · Apache License 2.0 · runs the same conversion as the <a href="https://github.com/MrFa1n/ArcBookmarksConverter/blob/main/arc_to_bookmarks.py">Python CLI</a>',
       themeToggleLabelToLight: "Switch to light theme",
       themeToggleLabelToDark: "Switch to dark theme",
       langToggleLabel: "Language",
@@ -114,7 +114,7 @@
       howtoNote:
         "В любом случае ваши Spaces появятся папками внутри «Imported».",
       footer:
-        '<a href="https://github.com/MrFa1n/ArcBookmarksConverter">ArcBookmarksConverter</a> · Apache License 2.0 · та же логика, что и в <a href="https://github.com/MrFa1n/ArcBookmarksConverter/blob/main/arc_to_chrome.py">Python CLI</a>',
+        '<a href="https://github.com/MrFa1n/ArcBookmarksConverter">ArcBookmarksConverter</a> · Apache License 2.0 · та же логика, что и в <a href="https://github.com/MrFa1n/ArcBookmarksConverter/blob/main/arc_to_bookmarks.py">Python CLI</a>',
       themeToggleLabelToLight: "Переключить на светлую тему",
       themeToggleLabelToDark: "Переключить на тёмную тему",
       langToggleLabel: "Язык",
