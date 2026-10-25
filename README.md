@@ -27,6 +27,8 @@ plain JavaScript, and your file never leaves your machine (see
 [`docs/arc-converter.js`](docs/arc-converter.js) — it's a direct port of the
 Python script below and produces byte-identical output).
 
+![Dropping StorableSidebar.json onto the converter page and downloading the result](docs/assets/how-to-use.gif)
+
 ## Usage (command line)
 
 Requires Python 3.10+, no third-party dependencies.
