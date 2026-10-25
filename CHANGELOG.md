@@ -24,6 +24,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `childrenIds` (Arc's authoritative ordering) instead of by the order
   those records happen to appear in `sidebar.items`, which a real export
   showed does not reliably match.
+- A GitHub Pages web version (`docs/`): drop in `StorableSidebar.json`,
+  get `arc_bookmarks.html` back, entirely client-side (no upload, no
+  server). `docs/arc-converter.js` is a function-for-function port of
+  `arc_to_chrome.py`, verified to produce byte-identical output.
 - `tools/sanitize_arc.py` to redact a sidebar file before sharing it.
 - CLI arguments for input/output paths on both scripts (previously hardcoded).
 - Test suite (`tests/`) and a synthetic sample fixture (`examples/`).

@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Arc to Chrome Bookmarks</title>
+<meta name="description" content="Convert Arc's StorableSidebar.json into a Chrome-importable bookmarks file, entirely in your browser — nothing is uploaded." />
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --panel: #ffffff;
+    --border: #e2e2e6;
+    --text: #1b1b1f;
+    --text-muted: #5b5b63;
+    --accent: #3461ff;
+    --accent-contrast: #ffffff;
+    --ok-bg: #edf7ee;
+    --ok-border: #bfe3c4;
+    --ok-text: #1e6b2e;
+    --warn-bg: #fff6e5;
+    --warn-border: #f1d98a;
+    --warn-text: #8a6300;
+    --err-bg: #fdecec;
+    --err-border: #f3b4b4;
+    --err-text: #9c1c1c;
+    --code-bg: #f1f1f4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #111113;
+      --panel: #19191c;
+      --border: #2c2c31;
+      --text: #ededf0;
+      --text-muted: #a3a3ab;
+      --accent: #6c8bff;
+      --accent-contrast: #0a0a0c;
+      --ok-bg: #122018;
+      --ok-border: #214a30;
+      --ok-text: #7fd996;
+      --warn-bg: #221d0d;
+      --warn-border: #4a3d12;
+      --warn-text: #e6c360;
+      --err-bg: #241414;
+      --err-border: #4a1f1f;
+      --err-text: #f08a8a;
+      --code-bg: #212126;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #111113;
+    --panel: #19191c;
+    --border: #2c2c31;
+    --text: #ededf0;
+    --text-muted: #a3a3ab;
+    --accent: #6c8bff;
+    --accent-contrast: #0a0a0c;
+    --ok-bg: #122018;
+    --ok-border: #214a30;
+    --ok-text: #7fd996;
+    --warn-bg: #221d0d;
+    --warn-border: #4a3d12;
+    --warn-text: #e6c360;
+    --err-bg: #241414;
+    --err-border: #4a1f1f;
+    --err-text: #f08a8a;
+    --code-bg: #212126;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 16px 80px;
+  }
+  h1 {
+    font-size: 1.6rem;
+    margin: 0 0 4px;
+  }
+  .subtitle {
+    color: var(--text-muted);
+    margin: 0 0 28px;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .privacy {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: var(--ok-bg);
+    border: 1px solid var(--ok-border);
+    color: var(--ok-text);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.92rem;
+    margin-bottom: 20px;
+  }
+  .privacy svg { flex: none; margin-top: 2px; }
+
+  #dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 36px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 120ms ease, background 120ms ease;
+  }
+  #dropzone:hover,
+  #dropzone.dragover {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+  }
+  #dropzone .hint {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: 6px;
+  }
+  #fileInput { display: none; }
+
+  button {
+    font: inherit;
+    cursor: pointer;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  #status { margin-top: 16px; }
+  .msg {
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.92rem;
+    border: 1px solid transparent;
+  }
+  .msg.err { background: var(--err-bg); border-color: var(--err-border); color: var(--err-text); }
+  .msg.warn { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
+  .msg.ok { background: var(--ok-bg); border-color: var(--ok-border); color: var(--ok-text); }
+
+  table.stats {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+    margin: 14px 0;
+  }
+  table.stats td {
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  table.stats td:last-child {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+
+  details.howto summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+  details.howto ol {
+    padding-left: 20px;
+    color: var(--text-muted);
+  }
+  code {
+    background: var(--code-bg);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 0.88em;
+  }
+
+  footer {
+    margin-top: 36px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Arc to Chrome Bookmarks</h1>
+  <p class="subtitle">
+    Turn Arc's <code>StorableSidebar.json</code> into a bookmarks file any browser can import —
+    one folder per Space, nesting and order preserved.
+  </p>
+
+  <div class="privacy">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 5v6c0 5 3.4 9 8 11 4.6-2 8-6 8-11V5l-8-3Z"/></svg>
+    <span>
+      Everything happens locally in your browser. Your file is never uploaded anywhere —
+      this page has no server and makes no network requests with your data.
+      (<a href="https://github.com/MrFa1n/ArcToHtml" target="_blank" rel="noopener">source on GitHub</a>, verify for yourself.)
+    </span>
+  </div>
+
+  <div class="panel">
+    <div id="dropzone" tabindex="0" role="button" aria-label="Choose or drop StorableSidebar.json">
+      <div><strong>Drop <code>StorableSidebar.json</code> here</strong> or click to choose a file</div>
+      <div class="hint">On macOS it's usually at ~/Library/Application Support/Arc/StorableSidebar.json</div>
+      <input type="file" id="fileInput" accept=".json,application/json" />
+    </div>
+
+    <div id="status"></div>
+  </div>
+
+  <details class="howto">
+    <summary>How to import the result into Chrome</summary>
+    <ol>
+      <li>Open <code>chrome://bookmarks</code></li>
+      <li>Click the ⋮ menu in the top right</li>
+      <li>Choose <em>Import bookmarks</em> and pick the downloaded file</li>
+      <li>Your Spaces show up as folders under "Imported"</li>
+    </ol>
+  </details>
+
+  <footer>
+    <a href="https://github.com/MrFa1n/ArcToHtml">ArcToHtml</a> ·
+    Apache License 2.0 ·
+    runs the same conversion as the <a href="https://github.com/MrFa1n/ArcToHtml/blob/main/arc_to_chrome.py">Python CLI</a>
+  </footer>
+</main>
+
+<script src="arc-converter.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

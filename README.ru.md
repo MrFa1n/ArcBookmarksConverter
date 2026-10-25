@@ -20,7 +20,16 @@ Arc закрывается / вы переходите на другой бра�
 друг с другом, но все понимают формат закладок Netscape HTML — он и служит
 мостом.
 
-## Использование
+## Веб-версия
+
+**[Открыть конвертер](https://MrFa1n.github.io/ArcToHtml/)** — перетащите
+свой `StorableSidebar.json`, получите `arc_bookmarks.html` обратно. Ничего
+устанавливать не нужно, файл никуда не загружается: это статическая
+страница, вся обработка идёт прямо в браузере на чистом JavaScript (см.
+[`docs/arc-converter.js`](docs/arc-converter.js) — это прямой порт Python-
+скрипта ниже, результат побайтово совпадает).
+
+## Использование (командная строка)
 
 Нужен Python 3.10+, никаких сторонних зависимостей.
 
@@ -89,6 +98,7 @@ python3 tools/sanitize_arc.py StorableSidebar.json -o StorableSidebar.sanitized.
 ```
 arc_to_chrome.py        # экспортёр — StorableSidebar.json -> HTML с закладками
 tools/sanitize_arc.py   # редактирует файл перед тем, как им поделиться
+docs/                    # веб-версия для GitHub Pages (та же логика, порт на JS)
 examples/                # санитизированный пример StorableSidebar.json для тестов
 tests/                   # тесты (стандартный unittest, без зависимостей)
 ```

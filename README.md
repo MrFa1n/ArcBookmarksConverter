@@ -18,7 +18,16 @@ years of organized tabs and folders. Browsers don't talk to each other
 directly, but they all understand the Netscape bookmarks HTML format — so
 that's the bridge.
 
-## Usage
+## Web version
+
+**[Open the converter](https://MrFa1n.github.io/ArcToHtml/)** — drop in your
+`StorableSidebar.json`, get `arc_bookmarks.html` back. No install, no
+upload: it's a static page, the conversion runs entirely in your browser in
+plain JavaScript, and your file never leaves your machine (see
+[`docs/arc-converter.js`](docs/arc-converter.js) — it's a direct port of the
+Python script below and produces byte-identical output).
+
+## Usage (command line)
 
 Requires Python 3.10+, no third-party dependencies.
 
@@ -86,6 +95,7 @@ best-effort filter, not a guarantee.
 ```
 arc_to_chrome.py        # the exporter — StorableSidebar.json -> bookmarks HTML
 tools/sanitize_arc.py   # redacts a sidebar file before sharing it
+docs/                    # the GitHub Pages web version (same logic, ported to JS)
 examples/                # a sanitized sample StorableSidebar.json for testing
 tests/                   # test suite (stdlib unittest, no dependencies)
 ```
