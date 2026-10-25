@@ -4,9 +4,67 @@
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('fileInput');
   const statusEl = document.getElementById('status');
+  const themeToggle = document.getElementById('themeToggle');
+
+  const THEME_KEY = 'arc2chrome-theme';
+
+  // --- theme --------------------------------------------------------
+
+  function currentTheme() {
+    const stored = document.documentElement.getAttribute('data-theme');
+    if (stored === 'light' || stored === 'dark') return stored;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+  }
+
+  function applyThemeLabel() {
+    const key = currentTheme() === 'dark' ? 'themeToggleLabelToLight' : 'themeToggleLabelToDark';
+    themeToggle.setAttribute('aria-label', window.I18N.t(key));
+  }
+
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch (e) {
+      /* ignore */
+    }
+    applyThemeLabel();
+  }
+
+  function initTheme() {
+    let stored = null;
+    try {
+      stored = localStorage.getItem(THEME_KEY);
+    } catch (e) {
+      /* ignore */
+    }
+    if (stored === 'light' || stored === 'dark') {
+      document.documentElement.setAttribute('data-theme', stored);
+    }
+    applyThemeLabel();
+  }
+
+  themeToggle.addEventListener('click', () => {
+    setTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+  });
+
+  // --- language -------------------------------------------------------
+
+  document.querySelectorAll('[data-lang-btn]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      window.I18N.setLanguage(btn.getAttribute('data-lang-btn'));
+    });
+  });
+
+  // --- conversion flow --------------------------------------------------
+
+  let lastResult = null; // { fileBaseName, html, stats } — re-rendered on language change
 
   function clearStatus() {
     statusEl.innerHTML = '';
+    lastResult = null;
   }
 
   function showMessage(kind, text) {
@@ -20,25 +78,23 @@
     return `<tr><td>${label}</td><td>${value}</td></tr>`;
   }
 
-  function showResult(fileBaseName, html, stats) {
-    clearStatus();
+  function renderResult(fileBaseName, html, stats) {
+    statusEl.innerHTML = '';
+    const t = window.I18N.t;
 
     if (stats.missingCount > 0) {
-      showMessage(
-        'warn',
-        `${stats.missingCount} tab(s) couldn't be placed in the tree and were collected into the "Arc — отдельные вкладки" folder instead.`
-      );
+      showMessage('warn', t('missingTabs', stats.missingCount));
     } else {
-      showMessage('ok', 'Converted successfully.');
+      showMessage('ok', t('convertedOk'));
     }
 
     const table = document.createElement('table');
     table.className = 'stats';
     table.innerHTML = [
-      statRow('Arc items parsed', stats.totalItems.toLocaleString()),
-      statRow('Spaces found', stats.spacesFound.toLocaleString()),
-      statRow('Tabs with a URL', stats.tabsFound.toLocaleString()),
-      statRow('Bookmarks exported', stats.exportedCount.toLocaleString()),
+      statRow(t('statItemsParsed'), stats.totalItems.toLocaleString()),
+      statRow(t('statSpacesFound'), stats.spacesFound.toLocaleString()),
+      statRow(t('statTabsFound'), stats.tabsFound.toLocaleString()),
+      statRow(t('statBookmarksExported'), stats.exportedCount.toLocaleString()),
     ].join('');
     statusEl.appendChild(table);
 
@@ -54,13 +110,13 @@
     downloadLink.className = 'btn';
     downloadLink.href = url;
     downloadLink.download = outName;
-    downloadLink.textContent = `Download ${outName}`;
+    downloadLink.textContent = t('downloadButton', outName);
     actions.appendChild(downloadLink);
 
     const resetBtn = document.createElement('button');
     resetBtn.className = 'btn btn-secondary';
     resetBtn.type = 'button';
-    resetBtn.textContent = 'Convert another file';
+    resetBtn.textContent = t('convertAnother');
     resetBtn.addEventListener('click', () => {
       clearStatus();
       fileInput.value = '';
@@ -70,24 +126,37 @@
     statusEl.appendChild(actions);
   }
 
+  function showResult(fileBaseName, html, stats) {
+    lastResult = { fileBaseName, html, stats };
+    renderResult(fileBaseName, html, stats);
+  }
+
+  window.I18N.onLanguageChange(() => {
+    applyThemeLabel();
+    if (lastResult) {
+      renderResult(lastResult.fileBaseName, lastResult.html, lastResult.stats);
+    }
+  });
+
   function handleFile(file) {
     clearStatus();
     if (!file) return;
+    const t = window.I18N.t;
 
     if (!/\.json$/i.test(file.name)) {
-      showMessage('warn', 'That doesn’t look like a .json file — trying anyway.');
+      showMessage('warn', t('warnNotJson'));
     }
 
     const reader = new FileReader();
     reader.onerror = () => {
-      showMessage('err', 'Could not read that file.');
+      showMessage('err', t('errCouldNotRead'));
     };
     reader.onload = () => {
       let source;
       try {
         source = JSON.parse(reader.result);
       } catch (err) {
-        showMessage('err', 'That file isn’t valid JSON. Make sure you picked StorableSidebar.json itself.');
+        showMessage('err', t('errInvalidJson'));
         return;
       }
 
@@ -96,9 +165,10 @@
         showResult(file.name, html, stats);
       } catch (err) {
         if (err instanceof window.ArcToChrome.ArcFormatError) {
-          showMessage('err', err.message);
+          const key = err.code === 'NO_ITEMS' ? 'errNoItems' : 'errNotArcFile';
+          showMessage('err', t(key));
         } else {
-          showMessage('err', `Unexpected error while converting: ${err.message}`);
+          showMessage('err', t('errUnexpected', err.message));
           console.error(err);
         }
       }
@@ -134,4 +204,7 @@
     const file = e.dataTransfer.files && e.dataTransfer.files[0];
     handleFile(file);
   });
+
+  initTheme();
+  window.I18N.init();
 })();

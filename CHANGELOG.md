@@ -27,7 +27,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - A GitHub Pages web version (`docs/`): drop in `StorableSidebar.json`,
   get `arc_bookmarks.html` back, entirely client-side (no upload, no
   server). `docs/arc-converter.js` is a function-for-function port of
-  `arc_to_chrome.py`, verified to produce byte-identical output.
+  `arc_to_chrome.py`, verified to produce byte-identical output. The page
+  has a light/dark theme toggle (defaults to system preference) and an
+  EN/RU language switcher (defaults to browser language), both persisted
+  per-visitor via `localStorage`.
 - `tools/sanitize_arc.py` to redact a sidebar file before sharing it.
 - CLI arguments for input/output paths on both scripts (previously hardcoded).
 - Test suite (`tests/`) and a synthetic sample fixture (`examples/`).

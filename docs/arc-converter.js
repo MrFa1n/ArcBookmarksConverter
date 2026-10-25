@@ -174,7 +174,15 @@
     return escapeHtml(value).replace(/"/g, '&quot;');
   }
 
-  class ArcFormatError extends Error {}
+  // `code` is a stable, language-independent identifier the UI can use to
+  // show a localized message (see i18n.js); `message` stays in English for
+  // anyone using this module directly (console, tests, non-UI contexts).
+  class ArcFormatError extends Error {
+    constructor(message, code) {
+      super(message);
+      this.code = code;
+    }
+  }
 
   /**
    * @param {object} source - parsed StorableSidebar.json
@@ -185,7 +193,8 @@
       (source && source.sidebar && source.sidebar.containers) || [];
     if (!Array.isArray(containers) || containers.length < 2 || !isPlainObject(containers[1])) {
       throw new ArcFormatError(
-        'Could not find sidebar.containers[1] — this doesn’t look like an Arc StorableSidebar.json file.'
+        'Could not find sidebar.containers[1] — this doesn’t look like an Arc StorableSidebar.json file.',
+        'NOT_ARC_FILE'
       );
     }
 
@@ -194,7 +203,7 @@
     const spaces = parseSpaces(sidebar.spaces || []);
 
     if (!items.length) {
-      throw new ArcFormatError('No Arc items found in sidebar.items.');
+      throw new ArcFormatError('No Arc items found in sidebar.items.', 'NO_ITEMS');
     }
 
     const byId = new Map();
