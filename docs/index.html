@@ -238,9 +238,25 @@
     cursor: pointer;
     font-weight: 600;
   }
-  details.howto ol {
+  details.howto { margin-bottom: 20px; }
+  .browser-guide { margin: 10px 0 0; }
+  .browser-guide dt {
+    font-weight: 600;
+    margin-top: 14px;
+  }
+  .browser-guide dt:first-child { margin-top: 10px; }
+  .browser-guide dd {
+    margin: 4px 0 0;
+  }
+  .browser-guide ol {
     padding-left: 20px;
     color: var(--text-muted);
+    margin: 0;
+  }
+  .howto-note {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 14px 0 0;
   }
   code {
     background: var(--code-bg);
@@ -291,7 +307,7 @@
 
   <details class="howto">
     <summary data-i18n="howtoSummary"></summary>
-    <ol id="howtoSteps"></ol>
+    <dl id="howtoGuide" class="browser-guide"></dl>
   </details>
 
   <footer data-i18n="footer"></footer>

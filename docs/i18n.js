@@ -22,13 +22,33 @@
       dropzoneTitle: 'Drop <code>StorableSidebar.json</code> here or click to choose a file',
       dropzoneHint: "On macOS it's usually at ~/Library/Application Support/Arc/StorableSidebar.json",
       dropzoneAriaLabel: 'Choose or drop StorableSidebar.json',
-      howtoSummary: 'How to import the result into Chrome',
-      howtoSteps: [
-        'Open <code>chrome://bookmarks</code>',
-        'Click the ⋮ menu in the top right',
-        'Choose <em>Import bookmarks</em> and pick the downloaded file',
-        'Your Spaces show up as folders under "Imported"',
+      howtoSummary: 'How to import the result into your browser',
+      howtoGroups: [
+        {
+          title: 'Chrome, Edge, Brave, Arc, Vivaldi…',
+          steps: [
+            'Open the bookmark manager — <code>chrome://bookmarks</code> (Chrome), <code>edge://favorites</code> (Edge), or the equivalent in your browser',
+            'Click the ⋮ menu in the top right',
+            'Choose <em>Import bookmarks</em> and pick the downloaded file',
+          ],
+        },
+        {
+          title: 'Firefox',
+          steps: [
+            'Open the Library: Bookmarks menu → <em>Manage Bookmarks</em> (or <code>Ctrl/Cmd+Shift+O</code>)',
+            'Import and Backup → <em>Import Bookmarks from HTML…</em>',
+            'Pick the downloaded file',
+          ],
+        },
+        {
+          title: 'Safari',
+          steps: [
+            'File → <em>Import From</em> → <em>Bookmarks HTML File…</em>',
+            'Pick the downloaded file',
+          ],
+        },
       ],
+      howtoNote: 'Either way, your Spaces show up as folders under "Imported".',
       footer:
         '<a href="https://github.com/MrFa1n/ArcToHtml">ArcToHtml</a> · Apache License 2.0 · runs the same conversion as the <a href="https://github.com/MrFa1n/ArcToHtml/blob/main/arc_to_chrome.py">Python CLI</a>',
       themeToggleLabelToLight: 'Switch to light theme',
@@ -60,13 +80,33 @@
       dropzoneTitle: 'Перетащите сюда <code>StorableSidebar.json</code> или нажмите, чтобы выбрать файл',
       dropzoneHint: 'На macOS он обычно лежит тут: ~/Library/Application Support/Arc/StorableSidebar.json',
       dropzoneAriaLabel: 'Выбрать или перетащить StorableSidebar.json',
-      howtoSummary: 'Как импортировать результат в Chrome',
-      howtoSteps: [
-        'Откройте <code>chrome://bookmarks</code>',
-        'Нажмите на меню ⋮ в правом верхнем углу',
-        'Выберите <em>Импортировать закладки</em> и укажите скачанный файл',
-        'Ваши Spaces появятся папками внутри «Imported»',
+      howtoSummary: 'Как импортировать результат в браузер',
+      howtoGroups: [
+        {
+          title: 'Chrome, Edge, Brave, Arc, Vivaldi…',
+          steps: [
+            'Откройте диспетчер закладок — <code>chrome://bookmarks</code> (Chrome), <code>edge://favorites</code> (Edge) или аналог в вашем браузере',
+            'Нажмите на меню ⋮ в правом верхнем углу',
+            'Выберите <em>Импортировать закладки</em> и укажите скачанный файл',
+          ],
+        },
+        {
+          title: 'Firefox',
+          steps: [
+            'Откройте Библиотеку: меню Закладки → <em>Управление закладками</em> (или <code>Ctrl/Cmd+Shift+O</code>)',
+            'Импорт и резервные копии → <em>Импортировать закладки из HTML…</em>',
+            'Укажите скачанный файл',
+          ],
+        },
+        {
+          title: 'Safari',
+          steps: [
+            'Файл → <em>Импортировать из</em> → <em>Файл закладок HTML…</em>',
+            'Укажите скачанный файл',
+          ],
+        },
       ],
+      howtoNote: 'В любом случае ваши Spaces появятся папками внутри «Imported».',
       footer:
         '<a href="https://github.com/MrFa1n/ArcToHtml">ArcToHtml</a> · Apache License 2.0 · та же логика, что и в <a href="https://github.com/MrFa1n/ArcToHtml/blob/main/arc_to_chrome.py">Python CLI</a>',
       themeToggleLabelToLight: 'Переключить на светлую тему',
@@ -120,9 +160,17 @@
         });
     });
 
-    const stepsList = document.getElementById('howtoSteps');
-    if (stepsList) {
-      stepsList.innerHTML = dict.howtoSteps.map((s) => `<li>${s}</li>`).join('');
+    const guide = document.getElementById('howtoGuide');
+    if (guide && Array.isArray(dict.howtoGroups)) {
+      guide.innerHTML =
+        dict.howtoGroups
+          .map(
+            (group) =>
+              `<dt>${group.title}</dt><dd><ol>${group.steps
+                .map((s) => `<li>${s}</li>`)
+                .join('')}</ol></dd>`
+          )
+          .join('') + (dict.howtoNote ? `<p class="howto-note">${dict.howtoNote}</p>` : '');
     }
 
     document.querySelectorAll('[data-lang-btn]').forEach((btn) => {
