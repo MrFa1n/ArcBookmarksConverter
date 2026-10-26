@@ -9,7 +9,7 @@ No dependencies to install. You need Python 3.10+.
 
 ```bash
 git clone <this repo>
-cd ArcToHtml
+cd ArcBookmarksConverter
 python3 -m unittest discover -s tests -v
 ```
 
@@ -41,7 +41,7 @@ small as possible while still reproducing the issue.
   ```bash
   python3 -m unittest discover -s tests -v
   ```
-- Describe *why* the change is needed, not just what it does.
+- Describe _why_ the change is needed, not just what it does.
 - If the change touches `arc_to_chrome.py`'s conversion logic, mirror it in
   `docs/arc-converter.js` (the GitHub Pages web version) and re-verify the
   two produce identical output — see `docs/README.md` for the diff command.

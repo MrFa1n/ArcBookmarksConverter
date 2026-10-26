@@ -9,7 +9,7 @@ gnarly internal structure (alternating key/value pairs, virtual containers for
 pinned tabs, parent/child relationships by ID). This tool walks that
 structure and produces a clean, folder-preserving bookmarks file.
 
-*(Читать на русском: [README.ru.md](README.ru.md))*
+_(Читать на русском: [README.ru.md](README.ru.md))_
 
 ## Why
 
@@ -20,7 +20,7 @@ that's the bridge.
 
 ## Web version
 
-**[Open the converter](https://MrFa1n.github.io/ArcToHtml/)** — drop in your
+**[Open the converter](https://MrFa1n.github.io/ArcBookmarksConverter/)** — drop in your
 `StorableSidebar.json`, get `arc_bookmarks.html` back. No install, no
 upload: it's a static page, the conversion runs entirely in your browser in
 plain JavaScript, and your file never leaves your machine (see
@@ -46,7 +46,7 @@ Requires Python 3.10+, no third-party dependencies.
    python3 arc_to_chrome.py
    ```
 3. Import `arc_bookmarks.html` into your new browser:
-   - **Chrome**: `chrome://bookmarks` → ⋮ menu → *Import bookmarks*
+   - **Chrome**: `chrome://bookmarks` → ⋮ menu → _Import bookmarks_
    - **Firefox**: Bookmarks → Manage Bookmarks → Import and Backup → Import Bookmarks (HTML)
    - **Safari**: File → Import From → Bookmarks HTML File
 
@@ -62,9 +62,9 @@ Requires Python 3.10+, no third-party dependencies.
   in — no extra wrapper subfolder.
 - **Arc's "Top Apps" row** (the small favicon-only tabs shown identically
   under every Space — shared rather than owned by any one of them) gets its
-  own top-level folder named *"Arc — Shared Pinned"*.
+  own top-level folder named _"Arc — Shared Pinned"_.
 - Anything that still can't be tied to a Space or a folder goes into a last
-  fallback folder named *"Arc — отдельные вкладки"*, so nothing is silently
+  fallback folder named _"Arc — отдельные вкладки"_, so nothing is silently
   dropped.
 - Duplicate entries (same ID, or same title+URL) are skipped.
 
